@@ -33,3 +33,27 @@ def get_photo_image(photo_id: int) -> Optional[Image.Image]:
     except Exception as e:
         logger.error(e)
         return None
+
+
+def delete_files_in_directory(directory_path):
+    # 遍历目录中的所有文件
+    for filename in os.listdir(directory_path):
+        file_path = os.path.join(directory_path, filename)
+        # 判断是否是文件
+        if os.path.isfile(file_path):
+            try:
+                # 删除文件
+                os.remove(file_path)
+                logger.info(f"已删除文件: {file_path}")
+            except Exception as e:
+                logger.error(f"删除文件时出错: {e}")
+        else:
+            logger.warning(f"跳过非文件: {file_path}")
+
+
+def clear_all_photos() -> bool:
+    success = tables.clear_all_photo_info()
+    if not success:
+        return False
+    delete_files_in_directory(photo_base_dir)
+    return True

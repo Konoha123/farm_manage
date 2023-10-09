@@ -119,6 +119,24 @@ def mark_photo_info_analyzed(photo_id: int) -> bool:
             session.close()
 
 
+def clear_all_photo_info()->bool:
+    with core.dbEngine.locker:
+        try:
+            session = core.dbEngine.new_session()
+        except Exception as e:
+            logger.error(e)
+            return False
+        try:
+            session.query(PhotoInfo).delete()
+            session.commit()
+            return True
+        except Exception as e:
+            logger.error(e)
+            return False
+        finally:
+            session.close()
+
+
 class StatCornPlantInfoResult(object):
     area_id: str
     plant_height_avg: float

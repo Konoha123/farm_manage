@@ -91,6 +91,24 @@ async def upload_photo(file: UploadFile = File(...),
         return UploadPhotoResponse(status=ServeStatus(ok=False, description="上传失败"))
 
 
+class ClearAllPhotosResponse(pydantic.BaseModel):
+    status: ServeStatus
+
+
+@app.delete("/clear_all_photos", tags=["照片管理"], response_model=ClearAllPhotosResponse, summary="清除所有照片",
+            description="清除所有照片")
+async def clear_all_photos():
+    try:
+        success = manage_photo.clear_all_photos()
+        if success:
+            return ClearAllPhotosResponse(status=ServeStatus(ok=True, description="删除成功"))
+        else:
+            return ClearAllPhotosResponse(status=ServeStatus(ok=False, description="删除失败"))
+    except Exception as e:
+        logger.error(e)
+        return ClearAllPhotosResponse(status=ServeStatus(ok=False, description="删除失败"))
+
+
 class ProcessAllUploadedPhotosResponse(pydantic.BaseModel):
     status: ServeStatus
 
