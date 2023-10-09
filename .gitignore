@@ -1,0 +1,5 @@
+.idea
+photos
+__pycache__
+database/__pycache__
+hc_logger/__pycache__
