@@ -1,14 +1,12 @@
 import datetime
 import os
-
 from typing import Optional, List, Tuple
 
-from sqlalchemy import Column, String, Boolean, Float, DateTime, BigInteger, Integer, ForeignKey
-from sqlalchemy.sql import func, null
-
-from . import core
+from sqlalchemy import Column, String, Float, DateTime, Integer, ForeignKey
+from sqlalchemy.sql import func, null, distinct
 
 from hc_logger import logging as log_utils
+from . import core
 
 logger = log_utils.get_logger(os.path.basename(__file__))
 
@@ -228,6 +226,56 @@ def list_all_corn_plants_info() -> Tuple[bool, int, List[CornPlantInfoResult]]:
                                 leaf_angle=result.leaf_angle, ears_height=result.ears_height, corn_plant_id=result.id,
                                 created_at=result.created_at, updated_at=result.updated_at) for result in results]
         return True, count, corn_plants
+    except Exception as e:
+        logger.error(e)
+        return False, 0, []
+
+
+class PhotoInfoResult(object):
+    photo_id: int
+    longitude: float
+    latitude: float
+    orientation_angle: float
+    analyzed_at: datetime.datetime
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+
+    def __init__(self,
+                 photo_id: int,
+                 longitude: float,
+                 latitude: float,
+                 orientation_angle: float,
+                 analyzed_at: datetime.datetime,
+                 created_at: datetime.datetime,
+                 updated_at: datetime.datetime):
+        self.photo_id: int = photo_id
+        self.longitude: float = longitude
+        self.latitude: float = latitude
+        self.orientation_angle: float = orientation_angle
+        self.analyzed_at: datetime.datetime = analyzed_at
+        self.created_at: datetime.datetime = created_at
+        self.updated_at: datetime.datetime = updated_at
+
+
+def list_photo_info_by_area_id(area_id: str) -> Tuple[bool, int, List[PhotoInfoResult]]:
+    try:
+        session = core.dbEngine.new_session()
+    except Exception as e:
+        logger.error(e)
+        return False, 0, []
+    try:
+        query = session.query(distinct(PhotoInfo.id), PhotoInfo)
+        query = query.join(CornPlantInfo, CornPlantInfo.photo_id == PhotoInfo.id)
+        query = query.filter(CornPlantInfo.area_id == area_id)
+        query_results = query.all()
+        results: List[PhotoInfoResult] = []
+        for query_result in query_results:
+            photo_info = query_result[1]
+            results.append(
+                PhotoInfoResult(photo_id=photo_info.id, longitude=photo_info.longitude, latitude=photo_info.latitude,
+                                orientation_angle=photo_info.orientation_angle, analyzed_at=photo_info.analyzed_at,
+                                created_at=photo_info.created_at, updated_at=photo_info.updated_at))
+        return True, len(results), results
     except Exception as e:
         logger.error(e)
         return False, 0, []

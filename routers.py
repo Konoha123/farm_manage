@@ -205,5 +205,39 @@ async def get_stat_result_of_all_areas():
         return GetStatResultOfAllAreasResponse(status=ServeStatus(ok=False, description="获取失败"), results=[])
 
 
+class RelatedPhotoInfo(pydantic.BaseModel):
+    photo_id: int
+    longitude: float
+    latitude: float
+    orientation_angle: float
+    analyzed_at: datetime.datetime
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
+
+
+class ListAllAreaInvolvedPhotosResponse(pydantic.BaseModel):
+    status: ServeStatus
+    count: int
+    results: list[RelatedPhotoInfo]
+
+
+@analyze_routers.get("/area/involved_photos/list", response_model=ListAllAreaInvolvedPhotosResponse,
+                     summary="获取所有地区相关照片信息", description="获取所有地区相关照片")
+async def list_all_area_involved_photos(area_id: str):
+    if area_id is None or area_id == "":
+        return ListAllAreaInvolvedPhotosResponse(status=ServeStatus(ok=False, description="地区id为空"), count=0,
+                                                 results=[])
+    success, count, related_photos = tables.list_photo_info_by_area_id(area_id=area_id)
+    if not success:
+        return ListAllAreaInvolvedPhotosResponse(status=ServeStatus(ok=False, description="获取失败"), count=0,
+                                                 results=[])
+    results = [RelatedPhotoInfo(photo_id=result.photo_id, longitude=result.longitude, latitude=result.latitude,
+                                orientation_angle=result.orientation_angle, analyzed_at=result.analyzed_at,
+                                created_at=result.created_at, updated_at=result.updated_at) for result in
+               related_photos]
+    return ListAllAreaInvolvedPhotosResponse(status=ServeStatus(ok=True, description="获取成功"), count=count,
+                                             results=results)
+
+
 app.include_router(photo_routers, prefix="/photos", tags=["照片管理"], )
 app.include_router(analyze_routers, prefix="/analyze", tags=["分析管理"], )
