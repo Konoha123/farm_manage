@@ -29,18 +29,30 @@ class CornPlantAnalyzeResult(object):
 def calculate_nearest_small_cell(x,
                                  y,
                                  angle_deg):
-    if 0 <= angle_deg < 90:
-        nearest_column = chr(ord('A') + int(x))
-        nearest_cell_y = int(y)
-    elif 90 <= angle_deg < 180:
-        nearest_column = chr(ord('A') + int(x))
-        nearest_cell_y = int(y) + 1
-    elif 180 <= angle_deg < 270:
-        nearest_column = chr(ord('A') + int(x) - 1)
-        nearest_cell_y = int(y) + 1
+    # 定义横线和竖线的坐标
+    horizontal_line_y = round(y)
+    vertical_line_x = round(x)
+
+    # 计算点到横线和竖线的距离
+    distance_to_horizontal_line = abs(y - horizontal_line_y)
+    distance_to_vertical_line = abs(x - vertical_line_x)
+
+    if distance_to_horizontal_line < distance_to_vertical_line:
+        # 离横线距离更近，点位于横线上
+        if 0 <= angle_deg < 180:
+            nearest_column = chr(ord('A') + int(x))
+            nearest_cell_y = int(horizontal_line_y) + 1
+        else:
+            nearest_column = chr(ord('A') + int(x))
+            nearest_cell_y = int(horizontal_line_y)
     else:
-        nearest_column = chr(ord('A') + int(x) - 1)
-        nearest_cell_y = int(y)
+        # 离竖线距离更近，点位于竖线上
+        if 0 <= angle_deg < 90 or 270 <= angle_deg < 360:
+            nearest_column = chr(ord('A') + int(vertical_line_x))
+            nearest_cell_y = int(y) + 1
+        else:
+            nearest_column = chr(ord('A') + int(vertical_line_x) - 1)
+            nearest_cell_y = int(y) + 1
 
     return f'{nearest_column}{nearest_cell_y}'
 
