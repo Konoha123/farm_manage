@@ -119,7 +119,7 @@ def mark_photo_info_analyzed(photo_id: int) -> bool:
             session.close()
 
 
-def clear_all_photo_info()->bool:
+def clear_all_photo_info() -> bool:
     with core.dbEngine.locker:
         try:
             session = core.dbEngine.new_session()
@@ -176,3 +176,35 @@ def stat_corn_plant_info_by_area_id() -> Tuple[bool, List[StatCornPlantInfoResul
             return False, []
         finally:
             session.close()
+
+
+class CornPlantInfoResult(object):
+    area_id: str
+    photo_id: int
+    plant_height: float
+    leaf_angle: float
+    ears_height: float
+
+    def __init__(self,
+                 area_id: str,
+                 photo_id: int,
+                 plant_height: float,
+                 leaf_angle: float,
+                 ears_height: float):
+        self.area_id: str = area_id
+        self.photo_id: int = photo_id
+        self.plant_height: float = plant_height
+        self.leaf_angle: float = leaf_angle
+        self.ears_height: float = ears_height
+
+
+def list_all_corn_plants_info() -> Tuple[bool, int, List[CornPlantInfoResult]]:
+    try:
+        count, results = core.paged_find_and_count(query_model=CornPlantInfo, cond=None, orders=[], page_size=0)
+        corn_plants = [
+            CornPlantInfoResult(area_id=result.area_id, photo_id=result.photo_id, plant_height=result.plant_height,
+                                leaf_angle=result.leaf_angle, ears_height=result.ears_height) for result in results]
+        return True, count, corn_plants
+    except Exception as e:
+        logger.error(e)
+        return False, 0, []

@@ -125,6 +125,31 @@ async def process_all_uploaded_photos():
     return ProcessAllUploadedPhotosResponse(status=ServeStatus(ok=True, description="处理完毕"))
 
 
+class CornPlantInfo(pydantic.BaseModel):
+    area_id: str
+    photo_id: int
+    plant_height: float
+    leaf_angle: float
+    ears_height: float
+
+
+class ListAllCornPlantInfoResponse(pydantic.BaseModel):
+    status: ServeStatus
+    count: int
+    results: list[CornPlantInfo]
+
+
+@analyze_routers.get("/corn_plants/list_all", response_model=ListAllCornPlantInfoResponse,
+                     summary="获取所有玉米植株信息", description="获取所有玉米植株信息")
+async def list_all_corn_plants_info():
+    success, count, corn_plants = tables.list_all_corn_plants_info()
+    if not success:
+        return ListAllCornPlantInfoResponse(status=ServeStatus(ok=False, description="获取失败"), count=0, results=[])
+    results = [CornPlantInfo(area_id=result.area_id, photo_id=result.photo_id, plant_height=result.plant_height,
+                             leaf_angle=result.leaf_angle, ears_height=result.ears_height) for result in corn_plants]
+    return ListAllCornPlantInfoResponse(status=ServeStatus(ok=True, description="获取成功"), count=count, results=results)
+
+
 class StatCornPlantInfoResult(pydantic.BaseModel):
     area_id: str
     plant_height_avg: float
