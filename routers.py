@@ -109,6 +109,24 @@ async def clear_all_photos():
         return ClearAllPhotosResponse(status=ServeStatus(ok=False, description="删除失败"))
 
 
+class StatPhotoCountResponse(pydantic.BaseModel):
+    status: ServeStatus
+    analyzed_photo_count: int
+    not_analyzed_photo_count: int
+
+
+@photo_routers.get("/count_analyzed", response_model=StatPhotoCountResponse, summary="按照是否分析统计照片数量",
+                   description="按照是否分析统计照片数量")
+async def stat_photo_count():
+    success, analyzed_photo_count, not_analyzed_photo_count = tables.stat_photo_info()
+    if not success:
+        return StatPhotoCountResponse(status=ServeStatus(ok=False, description="统计失败"))
+    else:
+        return StatPhotoCountResponse(status=ServeStatus(ok=True, description="统计成功"),
+                                      analyzed_photo_count=analyzed_photo_count,
+                                      not_analyzed_photo_count=not_analyzed_photo_count)
+
+
 analyze_routers = APIRouter()
 
 

@@ -4,7 +4,7 @@ import os
 from typing import Optional, List, Tuple
 
 from sqlalchemy import Column, String, Boolean, Float, DateTime, BigInteger, Integer, ForeignKey
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, null
 
 from . import core
 
@@ -137,6 +137,19 @@ def clear_all_photo_info() -> bool:
             session.close()
 
 
+def stat_photo_info() -> Tuple[bool, int, int]:
+    try:
+        analyze_photo_count, _ = core.paged_find_and_count(query_model=PhotoInfo, cond=PhotoInfo.analyzed_at != null(),
+                                                           orders=[None], page_size=0)
+        not_analyzed_photo_count, _ = core.paged_find_and_count(query_model=PhotoInfo,
+                                                                cond=PhotoInfo.analyzed_at == null(), orders=[None],
+                                                                page_size=0)
+        return True, analyze_photo_count, not_analyzed_photo_count
+    except Exception as e:
+        logger.error(e)
+        return False, 0, 0
+
+
 class StatCornPlantInfoResult(object):
     area_id: str
     plant_height_avg: float
@@ -212,9 +225,8 @@ def list_all_corn_plants_info() -> Tuple[bool, int, List[CornPlantInfoResult]]:
         count, results = core.paged_find_and_count(query_model=CornPlantInfo, cond=None, orders=[], page_size=0)
         corn_plants = [
             CornPlantInfoResult(area_id=result.area_id, photo_id=result.photo_id, plant_height=result.plant_height,
-                                leaf_angle=result.leaf_angle, ears_height=result.ears_height,
-                                corn_plant_id=result.id, created_at=result.created_at,
-                                updated_at=result.updated_at) for result in results]
+                                leaf_angle=result.leaf_angle, ears_height=result.ears_height, corn_plant_id=result.id,
+                                created_at=result.created_at, updated_at=result.updated_at) for result in results]
         return True, count, corn_plants
     except Exception as e:
         logger.error(e)
