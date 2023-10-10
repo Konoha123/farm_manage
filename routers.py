@@ -1,7 +1,7 @@
 import os
 import time
 
-from fastapi import FastAPI, Request, File, Form, UploadFile
+from fastapi import FastAPI, Request, File, Form, UploadFile, APIRouter
 from fastapi.openapi.docs import (get_redoc_html, get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html, )
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -68,12 +68,14 @@ class ServeStatus(pydantic.BaseModel):
     description: str
 
 
+photo_routers = APIRouter()
+
+
 class UploadPhotoResponse(pydantic.BaseModel):
     status: ServeStatus
 
 
-@app.post("/upload_photo", tags=["照片管理"], response_model=UploadPhotoResponse, summary="上传照片",
-          description="上传照片")
+@photo_routers.post("/upload", response_model=UploadPhotoResponse, summary="上传照片", description="上传照片")
 async def upload_photo(file: UploadFile = File(...),
                        longitude: float = Form(...),
                        latitude: float = Form(...),
@@ -95,8 +97,8 @@ class ClearAllPhotosResponse(pydantic.BaseModel):
     status: ServeStatus
 
 
-@app.delete("/clear_all_photos", tags=["照片管理"], response_model=ClearAllPhotosResponse, summary="清除所有照片",
-            description="清除所有照片")
+@photo_routers.delete("/clear_all", response_model=ClearAllPhotosResponse, summary="清除所有照片",
+                      description="清除所有照片")
 async def clear_all_photos():
     try:
         success = manage_photo.clear_all_photos()
@@ -109,12 +111,15 @@ async def clear_all_photos():
         return ClearAllPhotosResponse(status=ServeStatus(ok=False, description="删除失败"))
 
 
+analyze_routers = APIRouter()
+
+
 class ProcessAllUploadedPhotosResponse(pydantic.BaseModel):
     status: ServeStatus
 
 
-@app.put("/process_uploaded_photos", tags=["分析操作"], response_model=ProcessAllUploadedPhotosResponse,
-         summary="处理所有上传的照片", description="处理所有上传的照片")
+@analyze_routers.put("/process_all", response_model=ProcessAllUploadedPhotosResponse, summary="处理所有上传的照片",
+                     description="处理所有上传的照片")
 async def process_all_uploaded_photos():
     process.process_all()
     return ProcessAllUploadedPhotosResponse(status=ServeStatus(ok=True, description="处理完毕"))
@@ -132,8 +137,8 @@ class GetStatResultOfAllAreasResponse(pydantic.BaseModel):
     results: list[StatCornPlantInfoResult]
 
 
-@app.get("/get_stat_result_of_all_areas", tags=["分析操作"], response_model=GetStatResultOfAllAreasResponse,
-         summary="获取统计结果", description="获取统计结果")
+@analyze_routers.get("/stat_by_area", response_model=GetStatResultOfAllAreasResponse, summary="按小区统计",
+                     description="按小区统计")
 async def get_stat_result_of_all_areas():
     try:
         success, results = tables.stat_corn_plant_info_by_area_id()
@@ -147,3 +152,7 @@ async def get_stat_result_of_all_areas():
     except Exception as e:
         logger.error(e)
         return GetStatResultOfAllAreasResponse(status=ServeStatus(ok=False, description="获取失败"), results=[])
+
+
+app.include_router(photo_routers, prefix="/photos", tags=["照片管理"], )
+app.include_router(analyze_routers, prefix="/analyze", tags=["分析管理"], )
