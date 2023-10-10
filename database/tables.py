@@ -258,24 +258,28 @@ class PhotoInfoResult(object):
 
 
 def list_photo_info_by_area_id(area_id: str) -> Tuple[bool, int, List[PhotoInfoResult]]:
-    try:
-        session = core.dbEngine.new_session()
-    except Exception as e:
-        logger.error(e)
-        return False, 0, []
-    try:
-        query = session.query(distinct(PhotoInfo.id), PhotoInfo)
-        query = query.join(CornPlantInfo, CornPlantInfo.photo_id == PhotoInfo.id)
-        query = query.filter(CornPlantInfo.area_id == area_id)
-        query_results = query.all()
-        results: List[PhotoInfoResult] = []
-        for query_result in query_results:
-            photo_info = query_result[1]
-            results.append(
-                PhotoInfoResult(photo_id=photo_info.id, longitude=photo_info.longitude, latitude=photo_info.latitude,
-                                orientation_angle=photo_info.orientation_angle, analyzed_at=photo_info.analyzed_at,
-                                created_at=photo_info.created_at, updated_at=photo_info.updated_at))
-        return True, len(results), results
-    except Exception as e:
-        logger.error(e)
-        return False, 0, []
+    with core.dbEngine.locker:
+        try:
+            session = core.dbEngine.new_session()
+        except Exception as e:
+            logger.error(e)
+            return False, 0, []
+        try:
+            query = session.query(distinct(PhotoInfo.id), PhotoInfo)
+            query = query.join(CornPlantInfo, CornPlantInfo.photo_id == PhotoInfo.id)
+            query = query.filter(CornPlantInfo.area_id == area_id)
+            query_results = query.all()
+            results: List[PhotoInfoResult] = []
+            for query_result in query_results:
+                photo_info = query_result[1]
+                results.append(PhotoInfoResult(photo_id=photo_info.id, longitude=photo_info.longitude,
+                                               latitude=photo_info.latitude,
+                                               orientation_angle=photo_info.orientation_angle,
+                                               analyzed_at=photo_info.analyzed_at, created_at=photo_info.created_at,
+                                               updated_at=photo_info.updated_at))
+            return True, len(results), results
+        except Exception as e:
+            logger.error(e)
+            return False, 0, []
+        finally:
+            session.close()
