@@ -179,23 +179,32 @@ def stat_corn_plant_info_by_area_id() -> Tuple[bool, List[StatCornPlantInfoResul
 
 
 class CornPlantInfoResult(object):
+    corn_plant_id: int
     area_id: str
     photo_id: int
     plant_height: float
     leaf_angle: float
     ears_height: float
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
 
     def __init__(self,
+                 corn_plant_id: int,
                  area_id: str,
                  photo_id: int,
                  plant_height: float,
                  leaf_angle: float,
-                 ears_height: float):
+                 ears_height: float,
+                 created_at: datetime.datetime,
+                 updated_at: datetime.datetime):
+        self.corn_plant_id: int = corn_plant_id
         self.area_id: str = area_id
         self.photo_id: int = photo_id
         self.plant_height: float = plant_height
         self.leaf_angle: float = leaf_angle
         self.ears_height: float = ears_height
+        self.created_at: datetime.datetime = created_at
+        self.updated_at: datetime.datetime = updated_at
 
 
 def list_all_corn_plants_info() -> Tuple[bool, int, List[CornPlantInfoResult]]:
@@ -203,7 +212,9 @@ def list_all_corn_plants_info() -> Tuple[bool, int, List[CornPlantInfoResult]]:
         count, results = core.paged_find_and_count(query_model=CornPlantInfo, cond=None, orders=[], page_size=0)
         corn_plants = [
             CornPlantInfoResult(area_id=result.area_id, photo_id=result.photo_id, plant_height=result.plant_height,
-                                leaf_angle=result.leaf_angle, ears_height=result.ears_height) for result in results]
+                                leaf_angle=result.leaf_angle, ears_height=result.ears_height,
+                                corn_plant_id=result.id, created_at=result.created_at,
+                                updated_at=result.updated_at) for result in results]
         return True, count, corn_plants
     except Exception as e:
         logger.error(e)

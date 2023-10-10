@@ -1,3 +1,4 @@
+import datetime
 import os
 import time
 
@@ -126,11 +127,14 @@ async def process_all_uploaded_photos():
 
 
 class CornPlantInfo(pydantic.BaseModel):
+    corn_plant_id: int
     area_id: str
     photo_id: int
     plant_height: float
     leaf_angle: float
     ears_height: float
+    created_at: datetime.datetime
+    updated_at: datetime.datetime
 
 
 class ListAllCornPlantInfoResponse(pydantic.BaseModel):
@@ -146,8 +150,11 @@ async def list_all_corn_plants_info():
     if not success:
         return ListAllCornPlantInfoResponse(status=ServeStatus(ok=False, description="获取失败"), count=0, results=[])
     results = [CornPlantInfo(area_id=result.area_id, photo_id=result.photo_id, plant_height=result.plant_height,
-                             leaf_angle=result.leaf_angle, ears_height=result.ears_height) for result in corn_plants]
-    return ListAllCornPlantInfoResponse(status=ServeStatus(ok=True, description="获取成功"), count=count, results=results)
+                             leaf_angle=result.leaf_angle, ears_height=result.ears_height,
+                             corn_plant_id=result.corn_plant_id, created_at=result.created_at,
+                             updated_at=result.updated_at) for result in corn_plants]
+    return ListAllCornPlantInfoResponse(status=ServeStatus(ok=True, description="获取成功"), count=count,
+                                        results=results)
 
 
 class StatCornPlantInfoResult(pydantic.BaseModel):
