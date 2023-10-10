@@ -114,13 +114,17 @@ analyze_routers = APIRouter()
 
 class ProcessAllUploadedPhotosResponse(pydantic.BaseModel):
     status: ServeStatus
+    analyzed_photo_count: int
+    produced_plant_count: int
 
 
 @analyze_routers.put("/process_all", response_model=ProcessAllUploadedPhotosResponse, summary="处理所有上传的照片",
                      description="处理所有上传的照片")
 async def process_all_uploaded_photos():
-    process.process_all()
-    return ProcessAllUploadedPhotosResponse(status=ServeStatus(ok=True, description="处理完毕"))
+    analyzed_photo_count, produced_plant_count = process.process_all()
+    return ProcessAllUploadedPhotosResponse(status=ServeStatus(ok=True, description="处理完毕"),
+                                            analyzed_photo_count=analyzed_photo_count,
+                                            produced_plant_count=produced_plant_count)
 
 
 class CornPlantInfo(pydantic.BaseModel):
