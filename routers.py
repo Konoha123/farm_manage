@@ -2,20 +2,17 @@ import datetime
 import os
 import time
 
+import pydantic
+from PIL import Image
 from fastapi import FastAPI, Request, File, Form, UploadFile, APIRouter
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import (get_redoc_html, get_swagger_ui_html, get_swagger_ui_oauth2_redirect_html, )
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
 
-from PIL import Image
-
-import pydantic
-
+import manage_photo
+import process
 from database import tables
-
 from hc_logger import logging as log_utils
-
-import manage_photo, process
 
 logger = log_utils.get_logger(os.path.basename(__file__))
 
