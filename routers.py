@@ -21,6 +21,8 @@ app = FastAPI(title="玉米田地管理API", docs_url=None, redoc_url=None)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+app.mount("/images", StaticFiles(directory="photos"), name="images")
+
 origins = ["http://localhost.tiangolo.com", "https://localhost.tiangolo.com", "http://localhost",
            "http://localhost:8080", ]
 
