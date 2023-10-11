@@ -283,3 +283,28 @@ def list_photo_info_by_area_id(area_id: str) -> Tuple[bool, int, List[PhotoInfoR
             return False, 0, []
         finally:
             session.close()
+
+
+def list_corn_plants_info_by_photo_id(photo_id: int) -> Tuple[bool, int, List[CornPlantInfoResult]]:
+    with core.dbEngine.locker:
+        try:
+            session = core.dbEngine.new_session()
+        except Exception as e:
+            logger.error(e)
+            return False, 0, []
+        try:
+            query = session.query(CornPlantInfo)
+            query = query.filter(CornPlantInfo.photo_id == photo_id)
+            query_results = query.all()
+            results: List[CornPlantInfoResult] = [
+                CornPlantInfoResult(area_id=query_result.area_id, photo_id=query_result.photo_id,
+                                    plant_height=query_result.plant_height, leaf_angle=query_result.leaf_angle,
+                                    ears_height=query_result.ears_height, corn_plant_id=query_result.id,
+                                    created_at=query_result.created_at, updated_at=query_result.updated_at) for
+                query_result in query_results]
+            return True, len(results), results
+        except Exception as e:
+            logger.error(e)
+            return False, 0, []
+        finally:
+            session.close()
